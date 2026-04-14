@@ -247,11 +247,12 @@ table.camp-tbl tbody tr:hover td{background:var(--bg2)}
         </select>
       </div>
       <div class="field"><label>Channel</label>
-        <select id="f-channel">
+        <select id="f-channel" onchange="toggleCustomChannel(this)">
           <option>SMS</option><option>RCS</option><option>Email</option><option>WA</option>
           <option>Push</option><option>Banner</option><option>Popup</option><option>Chat</option>
-          <option>Push+Chat</option><option>Push+Popup</option>
+          <option>Push+Chat</option><option>Push+Popup</option><option value="__other__">Other...</option>
         </select>
+        <input id="f-channel-custom" placeholder="Type channel name" style="display:none;margin-top:6px;width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg2);color:var(--text);outline:none">
       </div>
     </div>
     <div class="frow">
@@ -427,12 +428,16 @@ function renderMetrics(data){
   const hours=getHourLoad(data);
   const peakVal=Math.max(...hours,0);
   const peakH=H_START+hours.indexOf(peakVal);
+  const allEqual=hours.every(v=>v===hours[0]);
   const totalH=data.reduce((s,c)=>s+(c.end-c.start),0);
   const avg=totalH?Math.round(total/totalH):0;
+  const peakHtml=allEqual
+    ? `<div class="metric"><div class="lbl">Peak hour</div><div class="val">—</div><div class="sub2">uniform load</div></div>`
+    : `<div class="metric"><div class="lbl">Peak hour</div><div class="val">${fmt(peakVal)}</div><div class="sub2">${peakH}:00–${peakH+1}:00</div></div>`;
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="lbl">Campaigns</div><div class="val">${data.length}</div></div>
     <div class="metric"><div class="lbl">Total volume</div><div class="val">${fmt(total)}</div></div>
-    <div class="metric"><div class="lbl">Peak hour</div><div class="val">${fmt(peakVal)}</div><div class="sub2">${peakH}:00–${peakH+1}:00</div></div>
+    ${peakHtml}
     <div class="metric"><div class="lbl">Avg/hour</div><div class="val">${fmt(avg)}</div></div>`;
 }
 
@@ -647,6 +652,12 @@ async function appendToSheets(row){
   return data;
 }
 
+function toggleCustomChannel(sel){
+  const custom=document.getElementById('f-channel-custom');
+  custom.style.display=sel.value==='__other__'?'block':'none';
+  if(sel.value==='__other__')custom.focus();
+}
+
 async function saveCampaign(){
   const name=document.getElementById('f-name').value.trim();
   if(!name){alert('Enter name');return;}
@@ -656,7 +667,7 @@ async function saveCampaign(){
   const btn=document.getElementById('save-btn');
   btn.disabled=true;btn.textContent='Saving...';
   const recurring=document.getElementById('f-recurring').checked;
-  const row=[name,document.getElementById('f-channel').value,document.getElementById('f-type').value,
+  const row=[name,(document.getElementById('f-channel').value==='__other__'?document.getElementById('f-channel-custom').value.trim()||'Other':document.getElementById('f-channel').value),document.getElementById('f-type').value,
     document.getElementById('f-product').value||'',document.getElementById('f-process').value||'',
     start,end,parseInt(document.getElementById('f-volume').value)||100000,
     recurring?'':(document.getElementById('f-date').value||''),
