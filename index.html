@@ -1,439 +1,682 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mass Sending Calendar</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #ffffff;
-    --bg2: #f5f5f3;
-    --bg3: #ebebea;
-    --text: #1a1a18;
-    --text2: #5f5e5a;
-    --text3: #888780;
-    --border: rgba(0,0,0,0.12);
-    --border2: rgba(0,0,0,0.22);
-    --blue: #378ADD;
-    --blue-bg: #E6F1FB;
-    --blue-text: #0C447C;
-    --green: #1D9E75;
-    --green-bg: #E1F5EE;
-    --green-text: #085041;
-    --amber: #BA7517;
-    --amber-bg: #FAEEDA;
-    --amber-text: #633806;
-    --radius: 8px;
-    --radius-lg: 12px;
-  }
-  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; padding: 24px; min-width: 800px; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#ebebea;
+  --text:#1a1a18;--text2:#5f5e5a;--text3:#888780;
+  --border:rgba(0,0,0,0.10);--border2:rgba(0,0,0,0.20);
+  --blue:#378ADD;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --green:#1D9E75;--green-bg:#E1F5EE;--green-text:#085041;
+  --amber:#BA7517;--amber-bg:#FAEEDA;--amber-text:#633806;
+  --red:#E24B4A;--r:8px;--rl:12px;
+}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;padding:24px;min-width:860px}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:var(--text3);margin-bottom:18px}
 
-  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
-  .subtitle { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+/* sync */
+.sync-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:var(--text3)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.sync-dot.loading{background:var(--amber);animation:blink 1s infinite}
+.sync-dot.error{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-  .top-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-  .top-bar select, .top-bar input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; outline: none; }
-  .top-bar select:focus, .top-bar input:focus { border-color: var(--blue); }
-  .btn { font-size: 12px; padding: 5px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; transition: background 0.15s; }
-  .btn:hover { background: var(--bg2); }
-  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 500; }
-  .btn-primary:hover { background: #185FA5; border-color: #185FA5; }
+/* view switcher */
+.view-bar{display:flex;align-items:center;gap:0;margin-bottom:16px;border:0.5px solid var(--border2);border-radius:var(--r);width:fit-content;overflow:hidden}
+.view-btn{font-size:12px;font-weight:500;padding:6px 18px;border:none;background:var(--bg);color:var(--text3);cursor:pointer;border-right:0.5px solid var(--border2)}
+.view-btn:last-child{border-right:none}
+.view-btn.active{background:var(--blue);color:#fff}
 
-  .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 20px; }
-  .metric { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
-  .metric .label { font-size: 11px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
-  .metric .val { font-size: 22px; font-weight: 600; color: var(--text); }
-  .metric .sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+/* week nav */
+.week-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.week-nav button{font-size:13px;padding:4px 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);cursor:pointer}
+.week-nav button:hover{background:var(--bg2)}
+.week-label{font-size:13px;font-weight:500;color:var(--text)}
 
-  .section-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+/* day picker */
+.day-bar{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.day-btn{font-size:12px;padding:4px 12px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);cursor:pointer}
+.day-btn:hover{background:var(--bg2)}
+.day-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.day-btn.today{font-weight:600}
 
-  /* Gantt */
-  .gantt-outer { overflow-x: auto; border: 0.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 20px; }
-  .gantt-inner { min-width: 700px; padding: 16px; }
-  .gantt-header { display: flex; margin-bottom: 6px; align-items: center; }
-  .name-col { width: 180px; min-width: 180px; flex-shrink: 0; }
-  .axis-wrap { flex: 1; display: grid; grid-template-columns: repeat(13, 1fr); }
-  .axis-wrap .h { font-size: 10px; color: var(--text3); text-align: center; }
-  .gantt-row { display: flex; align-items: center; margin-bottom: 5px; }
-  .row-meta { width: 180px; min-width: 180px; flex-shrink: 0; padding-right: 10px; }
-  .row-meta .rname { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
-  .row-meta .rmeta { font-size: 10px; color: var(--text3); }
-  .track { flex: 1; position: relative; height: 26px; background: var(--bg2); border-radius: 4px; }
-  .gbar { position: absolute; height: 100%; border-radius: 4px; cursor: pointer; display: flex; align-items: center; padding: 0 7px; font-size: 11px; font-weight: 500; overflow: hidden; white-space: nowrap; transition: filter 0.15s; }
-  .gbar:hover { filter: brightness(0.92); }
-  .gbar.reglament { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,0.3); }
-  .gbar.trigger   { background: var(--green-bg); color: var(--green-text); border: 0.5px solid rgba(29,158,117,0.3); }
-  .gbar.other     { background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid rgba(186,117,23,0.3); }
-  .peak-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: rgba(226,75,74,0.5); pointer-events: none; z-index: 5; }
-  .peak-line::before { content: attr(data-label); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #A32D2D; white-space: nowrap; font-weight: 600; }
+/* filters */
+.topbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{font-size:12px;padding:5px 11px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--bg2)}
+.btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-add{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:500;margin-left:auto}
+.btn-add:hover{background:#185FA5}
+.grp-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 
-  /* Legend */
-  .legend { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
-  .ld-r { background: var(--blue); }
-  .ld-t { background: var(--green); }
-  .ld-o { background: var(--amber); }
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.metric{background:var(--bg2);border-radius:var(--r);padding:12px 14px}
+.metric .lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:4px}
+.metric .val{font-size:22px;font-weight:600}
+.metric .sub2{font-size:11px;color:var(--text3);margin-top:2px}
 
-  /* Load chart */
-  .chart-outer { border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 24px; }
-  .chart-wrap { position: relative; width: 100%; height: 160px; }
+.sec{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 
-  /* Table */
-  .table-outer { border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  thead th { background: var(--bg2); text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 0.5px solid var(--border); }
-  tbody td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: var(--bg2); }
-  .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
-  .badge-r { background: var(--blue-bg); color: var(--blue-text); }
-  .badge-t { background: var(--green-bg); color: var(--green-text); }
-  .badge-o { background: var(--amber-bg); color: var(--amber-text); }
-  .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 2px 4px; border-radius: 4px; }
-  .del-btn:hover { color: #A32D2D; background: #FCEBEB; }
+/* gantt */
+.gantt-outer{border:0.5px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:10px;overflow-x:auto}
+.gantt{min-width:660px}
+.grow{display:flex;align-items:center;margin-bottom:5px}
+.gmeta{width:185px;min-width:185px;padding-right:10px}
+.gname{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gsub{font-size:10px;color:var(--text3)}
+.track{flex:1;position:relative;height:26px;background:var(--bg2);border-radius:4px}
+.track-axis{height:18px;background:transparent}
+.albl{position:absolute;font-size:9px;color:var(--text3);transform:translateX(-50%)}
+.bar{position:absolute;height:100%;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:600;overflow:hidden;white-space:nowrap;cursor:default}
+.bar-scheduled{background:var(--blue-bg);color:var(--blue-text);border:0.5px solid rgba(55,138,221,.3)}
+.bar-trigger{background:var(--green-bg);color:var(--green-text);border:0.5px solid rgba(29,158,117,.3)}
+.bar-other{background:var(--amber-bg);color:var(--amber-text);border:0.5px solid rgba(186,117,23,.3)}
+.peak-line{position:absolute;top:0;bottom:0;width:1.5px;background:rgba(226,75,74,.45);pointer-events:none}
 
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal-box { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); padding: 24px; width: 380px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
-  .modal-box h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
-  .field input, .field select { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); outline: none; }
-  .field input:focus, .field select:focus { border-color: var(--blue); background: var(--bg); }
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+/* week gantt */
+.wbar{position:absolute;height:100%;border-radius:4px;display:flex;align-items:center;padding:0 5px;font-size:10px;font-weight:600;overflow:hidden;white-space:nowrap}
 
-  .hr { border: none; border-top: 0.5px solid var(--border); margin: 20px 0; }
-  .no-data { text-align: center; padding: 24px; color: var(--text3); font-size: 13px; }
-  .peak-badge { display: inline-block; background: #FCEBEB; color: #A32D2D; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; margin-left: 8px; vertical-align: middle; }
+/* hour matrix */
+.matrix-wrap{overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--rl);margin-bottom:18px}
+.matrix{min-width:700px;border-collapse:collapse;width:100%;font-size:11px}
+.matrix th{background:var(--bg2);padding:6px 8px;text-align:center;border:0.5px solid var(--border);color:var(--text3);font-weight:600;font-size:10px;white-space:nowrap}
+.matrix th.row-head{text-align:left;width:120px;padding-left:12px}
+.matrix td{padding:5px 4px;text-align:center;border:0.5px solid var(--border);font-size:11px;font-weight:500;min-width:52px}
+.matrix td.row-head{text-align:left;padding-left:12px;font-weight:600;color:var(--text);background:var(--bg2)}
+.cell-0{background:var(--bg);color:var(--text3)}
+.cell-lo{background:#E6F1FB;color:#0C447C}
+.cell-mid{background:#B5D4F4;color:#0C447C}
+.cell-hi{background:#378ADD;color:#fff}
+.cell-peak{background:#E24B4A;color:#fff}
+
+/* legend */
+.legend{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.leg-dot{width:10px;height:10px;border-radius:2px}
+
+/* chart */
+.chart-outer{border:0.5px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:18px}
+.chart-wrap{position:relative;width:100%;height:160px}
+
+/* table */
+.tbl-outer{border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:24px}
+table.camp-tbl{width:100%;border-collapse:collapse;font-size:12px}
+table.camp-tbl thead th{background:var(--bg2);text-align:left;padding:8px 12px;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;border-bottom:0.5px solid var(--border)}
+table.camp-tbl tbody td{padding:8px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+table.camp-tbl tbody tr:last-child td{border-bottom:none}
+table.camp-tbl tbody tr:hover td{background:var(--bg2)}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px}
+.badge-scheduled{background:var(--blue-bg);color:var(--blue-text)}
+.badge-trigger{background:var(--green-bg);color:var(--green-text)}
+.badge-other{background:var(--amber-bg);color:var(--amber-text)}
+.del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 5px;border-radius:4px}
+.del:hover{color:#A32D2D;background:#FCEBEB}
+.nodata{text-align:center;padding:24px;color:var(--text3);font-size:13px}
+
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--rl);border:0.5px solid var(--border2);padding:24px;width:420px;max-width:96vw}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:16px}
+.frow{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.field{flex:1;min-width:130px}
+.field label{display:block;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.field input,.field select{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg2);color:var(--text);outline:none}
+.field input:focus,.field select:focus{border-color:var(--blue);background:var(--bg)}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.btn-save{flex:1;padding:8px;font-size:13px;border:none;border-radius:var(--r);background:var(--blue);color:#fff;cursor:pointer;font-weight:500}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.hr{border:none;border-top:0.5px solid var(--border);margin:18px 0}
 </style>
 </head>
 <body>
 
 <h1>Mass Sending Calendar</h1>
-<p class="subtitle">Планирование рассылок и прогнозирование нагрузки на системы</p>
+<p class="sub">Campaign planning · system load forecasting</p>
 
-<div class="top-bar">
-  <select id="filterDate" onchange="render()">
-    <option value="all">Все даты</option>
-    <option value="everyday">Каждый день</option>
-    <option value="2026-04-16">16 апр 2026</option>
-    <option value="2026-04-17">17 апр 2026</option>
-  </select>
-  <select id="filterType" onchange="render()">
-    <option value="all">Все типы</option>
-    <option value="reglament">Регламент</option>
-    <option value="trigger">Триггер</option>
-    <option value="other">Другое</option>
-  </select>
-  <select id="filterChannel" onchange="render()">
-    <option value="all">Все каналы</option>
-    <option value="RCS">RCS</option>
-    <option value="Push">Push</option>
-    <option value="SMS">SMS</option>
-  </select>
-  <button class="btn btn-primary" onclick="openModal()">+ Добавить рассылку</button>
+<div class="sync-bar">
+  <div class="sync-dot loading" id="sync-dot"></div>
+  <span id="sync-status">Connecting to Google Sheets...</span>
+  <button class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="loadFromSheets()">↻ Refresh</button>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+  <div class="view-bar">
+    <button class="view-btn active" onclick="setView('day',this)">Day</button>
+    <button class="view-btn" onclick="setView('week',this)">Week</button>
+    <button class="view-btn" onclick="setView('hour',this)">Hour</button>
+  </div>
+  <button class="btn btn-add" onclick="openModal()">+ Add campaign</button>
+</div>
+
+<!-- Day nav -->
+<div id="day-nav" class="day-bar"></div>
+
+<!-- Week nav -->
+<div id="week-nav" class="week-nav" style="display:none">
+  <button onclick="shiftWeek(-1)">← Prev</button>
+  <span class="week-label" id="week-label"></span>
+  <button onclick="shiftWeek(1)">Next →</button>
+</div>
+
+<!-- Filters -->
+<div class="topbar">
+  <span class="grp-label">Type</span>
+  <button class="btn active" onclick="setF('type','all',this)">All</button>
+  <button class="btn" onclick="setF('type','scheduled',this)">Scheduled</button>
+  <button class="btn" onclick="setF('type','trigger',this)">Trigger</button>
+
+  <span class="grp-label" style="margin-left:8px">Channel</span>
+  <button class="btn active" onclick="setF('channel','all',this)">All</button>
+  <button class="btn" onclick="setF('channel','SMS',this)">SMS</button>
+  <button class="btn" onclick="setF('channel','RCS',this)">RCS</button>
+  <button class="btn" onclick="setF('channel','Email',this)">Email</button>
+  <button class="btn" onclick="setF('channel','WA',this)">WA</button>
+  <button class="btn" onclick="setF('channel','Push',this)">Push</button>
+  <button class="btn" onclick="setF('channel','Banner',this)">Banner</button>
+  <button class="btn" onclick="setF('channel','Popup',this)">Popup</button>
+  <button class="btn" onclick="setF('channel','Chat',this)">Chat</button>
+  <button class="btn" onclick="setF('channel','Push+Chat',this)">Push+Chat</button>
+  <button class="btn" onclick="setF('channel','Push+Popup',this)">Push+Popup</button>
 </div>
 
 <div class="metrics" id="metrics"></div>
 
-<p class="section-label">Gantt — временные окна отправки (08:00 – 21:00)</p>
-<div class="gantt-outer">
-  <div class="gantt-inner">
-    <div class="gantt-header">
-      <div class="name-col"></div>
-      <div class="axis-wrap" id="axisWrap"></div>
-    </div>
-    <div id="ganttRows"></div>
+<!-- DAY VIEW -->
+<div id="view-day">
+  <p class="sec">Gantt — send windows (08:00–21:00)</p>
+  <div class="gantt-outer"><div class="gantt" id="gantt"></div></div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div>Scheduled</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Trigger</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>Other</div>
+    <div class="leg"><div class="leg-dot" style="background:rgba(226,75,74,.5);border-radius:0;width:3px;height:14px"></div>Peak load</div>
   </div>
+  <p class="sec">System load — message volume per hour</p>
+  <div class="chart-outer"><div class="chart-wrap"><canvas id="chart" role="img" aria-label="Load per hour">Load data.</canvas></div></div>
 </div>
 
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot ld-r"></div>Регламент</div>
-  <div class="legend-item"><div class="legend-dot ld-t"></div>Триггер</div>
-  <div class="legend-item"><div class="legend-dot ld-o"></div>Другое</div>
-</div>
-
-<p class="section-label">Нагрузка на системы — объём сообщений по часам</p>
-<div class="chart-outer">
-  <div class="chart-wrap">
-    <canvas id="loadChart" role="img" aria-label="Объём сообщений по часам дня">Данные нагрузки по часам.</canvas>
+<!-- WEEK VIEW -->
+<div id="view-week" style="display:none">
+  <p class="sec">Gantt — active campaigns this week</p>
+  <div class="gantt-outer"><div class="gantt" id="gantt-week"></div></div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div>Scheduled</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Trigger</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>Other</div>
   </div>
+  <p class="sec">Daily volume this week</p>
+  <div class="chart-outer"><div class="chart-wrap"><canvas id="chart-week" role="img" aria-label="Weekly load">Weekly load data.</canvas></div></div>
 </div>
 
-<p class="section-label">Список рассылок</p>
-<div class="table-outer">
-  <table>
-    <thead>
-      <tr>
-        <th>Название</th>
-        <th>Тип</th>
-        <th>Канал</th>
-        <th>Продукт</th>
-        <th>Время</th>
-        <th>Объём</th>
-        <th>Дата</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
+<!-- HOUR VIEW -->
+<div id="view-hour" style="display:none">
+  <p class="sec">Load matrix — volume by channel &amp; hour</p>
+  <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+  <p class="sec">Total volume by hour</p>
+  <div class="chart-outer"><div class="chart-wrap"><canvas id="chart-hour" role="img" aria-label="Hour matrix chart">Hour data.</canvas></div></div>
+</div>
+
+<div class="hr"></div>
+<p class="sec">All campaigns</p>
+<div class="tbl-outer">
+  <table class="camp-tbl">
+    <thead><tr><th>Name</th><th>Type</th><th>Channel</th><th>Product</th><th>Time</th><th>Volume</th><th>Date</th><th>Recurring</th><th></th></tr></thead>
+    <tbody id="tbody"></tbody>
   </table>
 </div>
 
 <!-- Modal -->
-<div class="modal-overlay" id="modal" onclick="overlayClick(event)">
-  <div class="modal-box">
-    <h2>Новая рассылка</h2>
-    <div class="field">
-      <label>Название</label>
-      <input id="f-name" placeholder="Cold CCR general">
-    </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Тип</label>
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <h2>New campaign</h2>
+    <div class="frow"><div class="field" style="flex:2"><label>Name</label><input id="f-name" placeholder="Campaign name"></div></div>
+    <div class="frow">
+      <div class="field"><label>Type</label>
         <select id="f-type">
-          <option value="reglament">Регламент</option>
-          <option value="trigger">Триггер</option>
-          <option value="other">Другое</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="trigger">Trigger</option>
+          <option value="other">Other</option>
         </select>
       </div>
-      <div class="field">
-        <label>Канал</label>
+      <div class="field"><label>Channel</label>
         <select id="f-channel">
-          <option>RCS</option>
-          <option>Push</option>
-          <option>SMS</option>
-          <option>Email</option>
+          <option>SMS</option><option>RCS</option><option>Email</option><option>WA</option>
+          <option>Push</option><option>Banner</option><option>Popup</option><option>Chat</option>
+          <option>Push+Chat</option><option>Push+Popup</option>
         </select>
       </div>
     </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Продукт</label>
-        <input id="f-product" placeholder="CCR">
-      </div>
-      <div class="field">
-        <label>Процесс</label>
-        <input id="f-process" placeholder="Cold">
+    <div class="frow">
+      <div class="field"><label>Product</label><input id="f-product" placeholder="CCR"></div>
+      <div class="field"><label>Process</label><input id="f-process" placeholder="Cold"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Start (hour)</label><input id="f-start" type="number" min="8" max="20" value="9"></div>
+      <div class="field"><label>End (hour)</label><input id="f-end" type="number" min="9" max="21" value="20"></div>
+      <div class="field"><label>Volume</label><input id="f-volume" type="number" value="500000"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Date (YYYY-MM-DD)</label><input id="f-date" type="date"></div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:20px">
+        <input id="f-recurring" type="checkbox" style="width:16px;height:16px;cursor:pointer">
+        <label style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);cursor:pointer" for="f-recurring">Recurring daily</label>
       </div>
     </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Начало (час)</label>
-        <input id="f-start" type="number" min="8" max="20" value="9">
-      </div>
-      <div class="field">
-        <label>Конец (час)</label>
-        <input id="f-end" type="number" min="9" max="21" value="20">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Объём</label>
-        <input id="f-volume" type="number" value="100000">
-      </div>
-      <div class="field">
-        <label>Дата (YYYY-MM-DD)</label>
-        <input id="f-date" placeholder="everyday или 2026-04-16">
-      </div>
-    </div>
-    <div class="modal-btns">
-      <button class="btn" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="addCampaign()">Добавить</button>
+    <div class="mbtns">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="saveCampaign()">Save to Sheets</button>
     </div>
   </div>
 </div>
 
 <script>
-const H_START = 8, H_END = 21, H_TOTAL = H_END - H_START;
+const SHEET_ID='1Um5pnHtX4HYYT5Xm-xWem7-O_2U92Kp8FRDoIF_c5i4';
+const API_KEY='AIzaSyCseb2wZyZ3REKfc2ww28O435-lmN5K1Xg';
+const RANGE='Sheet1!A:J';
+const H_START=8,H_END=21,H_TOTAL=13;
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const CHANNELS=['SMS','RCS','Email','WA','Push','Banner','Popup','Chat','Push+Chat','Push+Popup'];
 
-let campaigns = [
-  { id:1, name:'Cold CCR general',    type:'reglament', channel:'RCS',  product:'CCR', process:'Cold',            start:8,  end:20, volume:400000,    date:'everyday' },
-  { id:2, name:'PR Concierto campaign', type:'trigger', channel:'Push', product:'CCR', process:'Portfolio growth', start:9,  end:10, volume:15000000,  date:'2026-04-16' },
-  { id:3, name:'Welcome SMS',          type:'trigger',  channel:'SMS',  product:'CCR', process:'Cold',            start:10, end:12, volume:500000,    date:'everyday' },
-  { id:4, name:'Promo abril',          type:'reglament',channel:'Push', product:'CCR', process:'Warm',            start:14, end:18, volume:2000000,   date:'2026-04-16' },
-];
-let nextId = 5;
-let chart = null;
+let campaigns=[];
+let filters={type:'all',channel:'all'};
+let currentView='day';
+let selectedDay=null;
+let weekOffset=0;
+let charts={};
 
-function fmt(n) {
-  if (n >= 1e9) return (n/1e9).toFixed(1).replace('.0','') + 'B';
-  if (n >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
-  if (n >= 1e3) return Math.round(n/1e3) + 'K';
-  return n.toString();
+function fmt(n){
+  if(n>=1e9)return(n/1e9).toFixed(1).replace('.0','')+'B';
+  if(n>=1e6)return(n/1e6).toFixed(1).replace('.0','')+'M';
+  if(n>=1e3)return Math.round(n/1e3)+'K';
+  return ''+Math.round(n);
 }
 
-function getFiltered() {
-  const fd = document.getElementById('filterDate').value;
-  const ft = document.getElementById('filterType').value;
-  const fc = document.getElementById('filterChannel').value;
-  return campaigns.filter(c =>
-    (fd === 'all' || c.date === fd) &&
-    (ft === 'all' || c.type === ft) &&
-    (fc === 'all' || c.channel === fc)
-  );
+function getMonday(offset){
+  const d=new Date();
+  const day=d.getDay()||7;
+  d.setDate(d.getDate()-day+1+offset*7);
+  d.setHours(0,0,0,0);
+  return d;
 }
 
-function getHourLoad(data) {
-  const arr = Array(H_TOTAL).fill(0);
-  data.forEach(c => {
-    const ph = c.volume / Math.max(1, c.end - c.start);
-    for (let h = c.start; h < c.end; h++) {
-      const i = h - H_START;
-      if (i >= 0 && i < H_TOTAL) arr[i] += ph;
-    }
+function dateStr(d){
+  return d.toISOString().slice(0,10);
+}
+
+function fmtDay(d){
+  return d.toLocaleDateString('en',{month:'short',day:'numeric'});
+}
+
+function getWeekDays(){
+  const mon=getMonday(weekOffset);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(mon);d.setDate(d.getDate()+i);return d;
   });
-  return arr.map(v => Math.round(v));
 }
 
-function renderMetrics(data) {
-  const total = data.reduce((s,c)=>s+c.volume,0);
-  const hours = getHourLoad(data);
-  const peakVal = Math.max(...hours);
-  const peakHour = H_START + hours.indexOf(peakVal);
-  const totalHours = data.reduce((s,c)=>s+(c.end-c.start),0);
-  const avg = totalHours ? Math.round(total/totalHours) : 0;
-  document.getElementById('metrics').innerHTML = `
-    <div class="metric"><div class="label">Кампаний</div><div class="val">${data.length}</div></div>
-    <div class="metric"><div class="label">Суммарный объём</div><div class="val">${fmt(total)}</div></div>
-    <div class="metric"><div class="label">Пиковый час</div><div class="val">${fmt(peakVal)}</div><div class="sub">${peakHour}:00 – ${peakHour+1}:00</div></div>
-    <div class="metric"><div class="label">Ср. нагрузка/час</div><div class="val">${fmt(avg)}</div></div>
-  `;
+function isActiveOn(c,d){
+  if(c.recurring)return true;
+  return c.date===dateStr(d);
 }
 
-function renderAxis() {
-  const el = document.getElementById('axisWrap');
-  let html = '';
-  for (let h = H_START; h < H_END; h++) html += `<div class="h">${h}:00</div>`;
-  el.innerHTML = html;
+function setSyncStatus(msg,state){
+  document.getElementById('sync-status').textContent=msg;
+  const dot=document.getElementById('sync-dot');
+  dot.className='sync-dot'+(state?' '+state:'');
 }
 
-function renderGantt(data) {
-  const el = document.getElementById('ganttRows');
-  if (!data.length) { el.innerHTML = '<div class="no-data">Нет рассылок для выбранных фильтров</div>'; return; }
-  const hours = getHourLoad(data);
-  const peakIdx = hours.indexOf(Math.max(...hours));
-  const peakPct = ((peakIdx + 0.5) / H_TOTAL * 100).toFixed(2);
+async function loadFromSheets(){
+  setSyncStatus('Loading data...','loading');
+  try{
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+    const r=await fetch(url);
+    const data=await r.json();
+    if(data.error)throw new Error(data.error.message);
+    const rows=(data.values||[]).slice(1);
+    campaigns=rows.filter(r=>r[0]&&r[0]!=='name').map((r,i)=>({
+      id:i,
+      name:r[0]||'',channel:r[1]||'',type:r[2]||'other',
+      product:r[3]||'',process:r[4]||'',
+      start:parseInt(r[5])||8,end:parseInt(r[6])||20,
+      volume:parseInt(r[7])||0,date:r[8]||'',
+      recurring:(r[9]||'').toLowerCase()==='yes',
+    }));
+    setSyncStatus('Synced · '+new Date().toLocaleTimeString('en'),'');
+    buildDayNav();
+    render();
+  }catch(e){
+    setSyncStatus('Error: '+e.message+' — check table access','error');
+    render();
+  }
+}
 
-  el.innerHTML = data.map(c => {
-    const left = ((c.start - H_START) / H_TOTAL * 100).toFixed(2);
-    const width = ((c.end - c.start) / H_TOTAL * 100).toFixed(2);
-    const dateStr = c.date === 'everyday' ? 'каждый день' : c.date.slice(5).replace('-', '/');
-    return `
-    <div class="gantt-row">
-      <div class="row-meta">
-        <div class="rname" title="${c.name}">${c.name}</div>
-        <div class="rmeta">${c.channel} · ${dateStr}</div>
-      </div>
-      <div class="track">
-        <div class="gbar ${c.type}" style="left:${left}%;width:${width}%"
-             title="${c.name} | ${c.channel} | ${fmt(c.volume)} сообщ. | ${c.start}:00–${c.end}:00 | ${dateStr}">
-          ${parseFloat(width) > 12 ? fmt(c.volume) : ''}
-        </div>
-        <div class="peak-line" style="left:${peakPct}%" data-label="пик"></div>
-      </div>
-    </div>`;
+function buildDayNav(){
+  const specificDates=[...new Set(campaigns.filter(c=>!c.recurring&&c.date).map(c=>c.date))].sort();
+  const today=dateStr(new Date());
+  const all=[today,...specificDates.filter(d=>d!==today)].slice(0,10);
+  if(!selectedDay)selectedDay=today;
+  const el=document.getElementById('day-nav');
+  el.innerHTML=all.map(d=>{
+    const label=d===today?'Today ('+fmtDay(new Date(d+' 12:00'))+')':(new Date(d+' 12:00')).toLocaleDateString('en',{month:'short',day:'numeric'});
+    return `<button class="day-btn${d===selectedDay?' active':''}${d===today?' today':''}" onclick="selectDay('${d}',this)">${label}</button>`;
   }).join('');
 }
 
-function renderChart(data) {
-  const labels = [];
-  for (let h = H_START; h < H_END; h++) labels.push(`${h}:00`);
-  const vals = getHourLoad(data);
-  const maxVal = Math.max(...vals);
-  const colors = vals.map(v => v === maxVal && maxVal > 0 ? '#E24B4A' : '#378ADD');
+function selectDay(d,btn){
+  selectedDay=d;
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
 
-  if (chart) chart.destroy();
-  chart = new Chart(document.getElementById('loadChart'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Объём/час',
-        data: vals,
-        backgroundColor: colors,
-        borderRadius: 3,
-        barPercentage: 0.7,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.parsed.y) + ' сообщений' } }
-      },
-      scales: {
-        x: { ticks: { color: '#888780', font: { size: 10 }, autoSkip: false, maxRotation: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
-        y: { ticks: { color: '#888780', font: { size: 10 }, callback: v => fmt(v) }, grid: { color: 'rgba(0,0,0,0.05)' } }
-      }
-    }
+function setView(v,btn){
+  currentView=v;
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('day-nav').style.display=v==='day'?'flex':'none';
+  document.getElementById('week-nav').style.display=v==='week'?'flex':'none';
+  document.getElementById('view-day').style.display=v==='day'?'block':'none';
+  document.getElementById('view-week').style.display=v==='week'?'block':'none';
+  document.getElementById('view-hour').style.display=v==='hour'?'block':'none';
+  render();
+}
+
+function shiftWeek(d){weekOffset+=d;updateWeekLabel();render();}
+
+function updateWeekLabel(){
+  const days=getWeekDays();
+  document.getElementById('week-label').textContent=fmtDay(days[0])+' – '+fmtDay(days[6]);
+}
+
+function setF(key,val,btn){
+  filters[key]=val;
+  btn.parentNode.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function getFiltered(forDate){
+  const d=forDate||selectedDay;
+  return campaigns.filter(c=>{
+    const dateOk=c.recurring||(c.date&&c.date===d);
+    return dateOk&&
+      (filters.type==='all'||c.type===filters.type)&&
+      (filters.channel==='all'||c.channel===filters.channel);
   });
 }
 
-function renderTable(data) {
-  const el = document.getElementById('tableBody');
-  if (!data.length) { el.innerHTML = '<tr><td colspan="8" class="no-data">Нет данных</td></tr>'; return; }
-  const badgeClass = t => t === 'reglament' ? 'badge-r' : t === 'trigger' ? 'badge-t' : 'badge-o';
-  const typeLabel = t => t === 'reglament' ? 'Регламент' : t === 'trigger' ? 'Триггер' : 'Другое';
-  const dateStr = d => d === 'everyday' ? 'Каждый день' : d.slice(5).replace('-', '/');
-  el.innerHTML = data.map(c => `
-    <tr>
-      <td><strong>${c.name}</strong></td>
-      <td><span class="badge ${badgeClass(c.type)}">${typeLabel(c.type)}</span></td>
-      <td>${c.channel}</td>
-      <td>${c.product || '—'}</td>
-      <td>${c.start}:00 – ${c.end}:00</td>
-      <td>${fmt(c.volume)}</td>
-      <td>${dateStr(c.date)}</td>
-      <td><button class="del-btn" onclick="deleteCampaign(${c.id})" title="Удалить">✕</button></td>
-    </tr>
-  `).join('');
+function getHourLoad(data){
+  const arr=Array(H_TOTAL).fill(0);
+  data.forEach(c=>{
+    const ph=c.volume/Math.max(1,c.end-c.start);
+    for(let h=c.start;h<c.end;h++){const i=h-H_START;if(i>=0&&i<H_TOTAL)arr[i]+=ph;}
+  });
+  return arr.map(v=>Math.round(v));
 }
 
-function render() {
-  const data = getFiltered();
-  renderMetrics(data);
-  renderGantt(data);
-  renderChart(data);
-  renderTable(data);
+function renderMetrics(data){
+  const total=data.reduce((s,c)=>s+c.volume,0);
+  const hours=getHourLoad(data);
+  const peakVal=Math.max(...hours,0);
+  const peakH=H_START+hours.indexOf(peakVal);
+  const totalH=data.reduce((s,c)=>s+(c.end-c.start),0);
+  const avg=totalH?Math.round(total/totalH):0;
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="lbl">Campaigns</div><div class="val">${data.length}</div></div>
+    <div class="metric"><div class="lbl">Total volume</div><div class="val">${fmt(total)}</div></div>
+    <div class="metric"><div class="lbl">Peak hour</div><div class="val">${fmt(peakVal)}</div><div class="sub2">${peakH}:00–${peakH+1}:00</div></div>
+    <div class="metric"><div class="lbl">Avg/hour</div><div class="val">${fmt(avg)}</div></div>`;
 }
 
-function deleteCampaign(id) {
-  campaigns = campaigns.filter(c => c.id !== id);
-  render();
+function renderGanttDay(data){
+  const el=document.getElementById('gantt');
+  if(!data.length){el.innerHTML='<div class="nodata">No campaigns for this day</div>';return;}
+  const hours=getHourLoad(data);
+  const peakIdx=hours.indexOf(Math.max(...hours));
+  const peakPct=((peakIdx+0.5)/H_TOTAL*100).toFixed(2);
+  let axis='<div class="grow"><div class="gmeta"></div><div class="track track-axis">';
+  for(let h=H_START;h<H_END;h++)
+    axis+=`<span class="albl" style="left:${((h-H_START)/H_TOTAL*100).toFixed(1)}%">${h}:00</span>`;
+  axis+='</div></div>';
+  const rows=data.map(c=>{
+    const left=((c.start-H_START)/H_TOTAL*100).toFixed(2);
+    const width=((c.end-c.start)/H_TOTAL*100).toFixed(2);
+    const label=parseFloat(width)>11?fmt(c.volume):'';
+    return `<div class="grow">
+      <div class="gmeta"><div class="gname" title="${c.name}">${c.name}</div><div class="gsub">${c.channel}${c.recurring?' · recurring':''}</div></div>
+      <div class="track">
+        <div class="bar bar-${c.type}" style="left:${left}%;width:${width}%" title="${c.name} | ${fmt(c.volume)} | ${c.start}:00–${c.end}:00">${label}</div>
+        <div class="peak-line" style="left:${peakPct}%"></div>
+      </div></div>`;
+  }).join('');
+  el.innerHTML=axis+rows;
 }
 
-function openModal() { document.getElementById('modal').classList.add('open'); }
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
-function overlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+function renderChartDay(data){
+  const labels=Array.from({length:H_TOTAL},(_,i)=>`${H_START+i}:00`);
+  const vals=getHourLoad(data);
+  const maxV=Math.max(...vals,1);
+  const colors=vals.map(v=>v===maxV&&maxV>0?'#E24B4A':'#378ADD');
+  if(charts.day)charts.day.destroy();
+  charts.day=new Chart(document.getElementById('chart'),{
+    type:'bar',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:3,barPercentage:.72}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.y)+' msgs'}}},
+      scales:{
+        x:{ticks:{color:'#888780',font:{size:10},autoSkip:false,maxRotation:0},grid:{color:'rgba(0,0,0,0.05)'}},
+        y:{ticks:{color:'#888780',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.05)'}}
+      }}
+  });
+}
 
-function addCampaign() {
-  const name = document.getElementById('f-name').value.trim();
-  if (!name) { alert('Введи название'); return; }
-  const start = parseInt(document.getElementById('f-start').value);
-  const end = parseInt(document.getElementById('f-end').value);
-  if (end <= start) { alert('Конец должен быть позже начала'); return; }
-  const date = document.getElementById('f-date').value.trim() || 'everyday';
-  campaigns.push({ id: nextId++, name, type: document.getElementById('f-type').value, channel: document.getElementById('f-channel').value, product: document.getElementById('f-product').value || '—', process: document.getElementById('f-process').value || '—', start, end, volume: parseInt(document.getElementById('f-volume').value) || 100000, date });
+function renderWeek(){
+  const days=getWeekDays();
+  updateWeekLabel();
+  const el=document.getElementById('gantt-week');
 
-  // add date to filter if new
-  const sel = document.getElementById('filterDate');
-  if (date !== 'everyday' && !Array.from(sel.options).find(o => o.value === date)) {
-    const opt = document.createElement('option');
-    opt.value = date; opt.text = date.slice(5).replace('-', ' апр ');
-    sel.appendChild(opt);
+  const activeCampaigns=campaigns.filter(c=>
+    (filters.type==='all'||c.type===filters.type)&&
+    (filters.channel==='all'||c.channel===filters.channel)&&
+    days.some(d=>isActiveOn(c,d))
+  );
+
+  if(!activeCampaigns.length){el.innerHTML='<div class="nodata">No campaigns this week</div>';return;}
+
+  let axis='<div class="grow"><div class="gmeta"></div><div class="track track-axis" style="height:20px">';
+  days.forEach((_,i)=>{
+    axis+=`<span class="albl" style="left:${(i/7*100+1/7*50).toFixed(1)}%">${DAYS[i]}</span>`;
+  });
+  axis+='</div></div>';
+
+  const rows=activeCampaigns.map(c=>{
+    let bars='';
+    days.forEach((d,i)=>{
+      if(isActiveOn(c,d)){
+        const left=(i/7*100).toFixed(2);
+        const width=(1/7*100).toFixed(2);
+        bars+=`<div class="wbar bar-${c.type}" style="left:${left}%;width:calc(${width}% - 2px);margin:0 1px" title="${c.name} | ${fmtDay(d)} | ${fmt(c.volume)}">${i===0&&parseFloat(width)>8?fmt(c.volume):''}</div>`;
+      }
+    });
+    return `<div class="grow">
+      <div class="gmeta"><div class="gname" title="${c.name}">${c.name}</div><div class="gsub">${c.channel}</div></div>
+      <div class="track">${bars}</div></div>`;
+  }).join('');
+  el.innerHTML=axis+rows;
+
+  const dailyVols=days.map(d=>{
+    return activeCampaigns.filter(c=>isActiveOn(c,d)).reduce((s,c)=>s+c.volume,0);
+  });
+  const maxV=Math.max(...dailyVols,1);
+  const colors=dailyVols.map(v=>v===maxV&&maxV>0?'#E24B4A':'#378ADD');
+  if(charts.week)charts.week.destroy();
+  charts.week=new Chart(document.getElementById('chart-week'),{
+    type:'bar',
+    data:{labels:days.map((d,i)=>DAYS[i]+' '+fmtDay(d)),datasets:[{data:dailyVols,backgroundColor:colors,borderRadius:3,barPercentage:.7}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.y)+' msgs'}}},
+      scales:{
+        x:{ticks:{color:'#888780',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}},
+        y:{ticks:{color:'#888780',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.05)'}}
+      }}
+  });
+}
+
+function renderHour(){
+  const data=campaigns.filter(c=>
+    (c.recurring||(c.date&&c.date===selectedDay))&&
+    (filters.type==='all'||c.type===filters.type)&&
+    (filters.channel==='all'||c.channel===filters.channel)
+  );
+
+  const usedChannels=[...new Set(data.map(c=>c.channel))].filter(Boolean);
+  if(!usedChannels.length){
+    document.getElementById('matrix').innerHTML='<tr><td class="nodata" colspan="15">No campaigns for this day</td></tr>';
+    return;
   }
-  closeModal();
-  render();
+
+  const matrix={};
+  usedChannels.forEach(ch=>{
+    matrix[ch]=Array(H_TOTAL).fill(0);
+    data.filter(c=>c.channel===ch).forEach(c=>{
+      const ph=c.volume/Math.max(1,c.end-c.start);
+      for(let h=c.start;h<c.end;h++){const i=h-H_START;if(i>=0&&i<H_TOTAL)matrix[ch][i]+=ph;}
+    });
+    matrix[ch]=matrix[ch].map(v=>Math.round(v));
+  });
+
+  const allVals=usedChannels.flatMap(ch=>matrix[ch]);
+  const maxVal=Math.max(...allVals,1);
+
+  function cellClass(v){
+    if(v===0)return 'cell-0';
+    const pct=v/maxVal;
+    if(pct>=0.9)return 'cell-peak';
+    if(pct>=0.6)return 'cell-hi';
+    if(pct>=0.3)return 'cell-mid';
+    return 'cell-lo';
+  }
+
+  let head='<thead><tr><th class="row-head">Channel</th>';
+  for(let h=H_START;h<H_END;h++)head+=`<th>${h}:00</th>`;
+  head+='<th>Total</th></tr></thead>';
+
+  let body='<tbody>';
+  usedChannels.forEach(ch=>{
+    body+=`<tr><td class="row-head">${ch}</td>`;
+    matrix[ch].forEach(v=>{
+      body+=`<td class="${cellClass(v)}">${v>0?fmt(v):''}</td>`;
+    });
+    const total=matrix[ch].reduce((s,v)=>s+v,0);
+    body+=`<td style="font-weight:600;background:var(--bg2)">${fmt(total)}</td></tr>`;
+  });
+
+  const totals=Array(H_TOTAL).fill(0);
+  usedChannels.forEach(ch=>matrix[ch].forEach((v,i)=>totals[i]+=v));
+  body+='<tr style="border-top:1px solid var(--border2)"><td class="row-head" style="font-weight:700">Total</td>';
+  totals.forEach(v=>body+=`<td class="${cellClass(v)}" style="font-weight:600">${v>0?fmt(v):''}</td>`);
+  body+=`<td style="font-weight:700;background:var(--bg3)">${fmt(totals.reduce((s,v)=>s+v,0))}</td></tr>`;
+  body+='</tbody>';
+
+  document.getElementById('matrix').innerHTML=head+body;
+
+  if(charts.hour)charts.hour.destroy();
+  const labels=Array.from({length:H_TOTAL},(_,i)=>`${H_START+i}:00`);
+  const maxT=Math.max(...totals,1);
+  const colors=totals.map(v=>v===maxT&&maxT>0?'#E24B4A':'#378ADD');
+  charts.hour=new Chart(document.getElementById('chart-hour'),{
+    type:'bar',
+    data:{labels,datasets:[{data:totals,backgroundColor:colors,borderRadius:3,barPercentage:.72}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.y)+' msgs'}}},
+      scales:{
+        x:{ticks:{color:'#888780',font:{size:10},autoSkip:false,maxRotation:0},grid:{color:'rgba(0,0,0,0.05)'}},
+        y:{ticks:{color:'#888780',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.05)'}}
+      }}
+  });
 }
 
-renderAxis();
-render();
+function renderTable(){
+  const el=document.getElementById('tbody');
+  const data=campaigns.filter(c=>
+    (filters.type==='all'||c.type===filters.type)&&
+    (filters.channel==='all'||c.channel===filters.channel)
+  );
+  if(!data.length){el.innerHTML='<tr><td colspan="9" class="nodata">No campaigns</td></tr>';return;}
+  const tl=t=>t==='scheduled'?'Scheduled':t==='trigger'?'Trigger':'Other';
+  el.innerHTML=data.map(c=>`<tr>
+    <td><strong>${c.name}</strong></td>
+    <td><span class="badge badge-${c.type}">${tl(c.type)}</span></td>
+    <td>${c.channel}</td><td>${c.product||'—'}</td>
+    <td>${c.start}:00–${c.end}:00</td>
+    <td>${fmt(c.volume)}</td>
+    <td>${c.date||'—'}</td>
+    <td>${c.recurring?'<span style="background:var(--green-bg);color:var(--green-text);font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500">Yes</span>':'No'}</td>
+    <td><button class="del" onclick="delLocal(${c.id})" title="Remove locally">✕</button></td>
+  </tr>`).join('');
+}
+
+function delLocal(id){campaigns=campaigns.filter(c=>c.id!==id);render();}
+
+function render(){
+  const dayData=getFiltered();
+  renderMetrics(dayData);
+  if(currentView==='day'){renderGanttDay(dayData);renderChartDay(dayData);}
+  else if(currentView==='week'){renderWeek();}
+  else if(currentView==='hour'){renderHour();}
+  renderTable();
+}
+
+function openModal(){document.getElementById('overlay').classList.add('open');}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function overlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+
+async function appendToSheets(row){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:[row]})});
+  const data=await r.json();
+  if(data.error)throw new Error(data.error.message);
+  return data;
+}
+
+async function saveCampaign(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Enter name');return;}
+  const start=parseInt(document.getElementById('f-start').value);
+  const end=parseInt(document.getElementById('f-end').value);
+  if(end<=start){alert('End must be after start');return;}
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  const recurring=document.getElementById('f-recurring').checked;
+  const row=[name,document.getElementById('f-channel').value,document.getElementById('f-type').value,
+    document.getElementById('f-product').value||'',document.getElementById('f-process').value||'',
+    start,end,parseInt(document.getElementById('f-volume').value)||100000,
+    recurring?'':(document.getElementById('f-date').value||''),
+    recurring?'yes':'no'];
+  try{
+    await appendToSheets(row);
+    closeModal();
+    btn.textContent='Save to Sheets';btn.disabled=false;
+    await loadFromSheets();
+  }catch(e){
+    alert('Save error: '+e.message+'\n\nMake sure the table is set to "Editor" access for anyone with the link.');
+    btn.textContent='Save to Sheets';btn.disabled=false;
+  }
+}
+
+selectedDay=dateStr(new Date());
+updateWeekLabel();
+document.getElementById('day-nav').style.display='flex';
+loadFromSheets();
+setInterval(loadFromSheets,60000);
 </script>
 </body>
 </html>
