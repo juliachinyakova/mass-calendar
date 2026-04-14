@@ -6,159 +6,193 @@
 <title>Mass Sending Calendar</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #ffffff; --bg2: #f5f5f3; --bg3: #ebebea;
-  --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
-  --border: rgba(0,0,0,0.10); --border2: rgba(0,0,0,0.20);
-  --blue: #378ADD; --blue-bg: #E6F1FB; --blue-text: #0C447C;
-  --green: #1D9E75; --green-bg: #E1F5EE; --green-text: #085041;
-  --amber: #BA7517; --amber-bg: #FAEEDA; --amber-text: #633806;
-  --red: #E24B4A;
-  --r: 8px; --rl: 12px;
-}
-body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; padding: 24px; min-width: 820px; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #ebebea;
+    --text: #1a1a18;
+    --text2: #5f5e5a;
+    --text3: #888780;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue: #378ADD;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --green: #1D9E75;
+    --green-bg: #E1F5EE;
+    --green-text: #085041;
+    --amber: #BA7517;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; padding: 24px; min-width: 800px; }
 
-h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-.sub { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+  .subtitle { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
 
-.topbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
-.btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--bg); color: var(--text); cursor: pointer; transition: background .15s; }
-.btn:hover { background: var(--bg2); }
-.btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-.btn-add { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 500; margin-left: auto; }
-.btn-add:hover { background: #185FA5; }
-.grp-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .top-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .top-bar select, .top-bar input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; outline: none; }
+  .top-bar select:focus, .top-bar input:focus { border-color: var(--blue); }
+  .btn { font-size: 12px; padding: 5px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; transition: background 0.15s; }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 500; }
+  .btn-primary:hover { background: #185FA5; border-color: #185FA5; }
 
-.sync-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 12px; color: var(--text3); }
-.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-.sync-dot.loading { background: var(--amber); animation: blink 1s infinite; }
-.sync-dot.error { background: var(--red); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 20px; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+  .metric .label { font-size: 11px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+  .metric .val { font-size: 22px; font-weight: 600; color: var(--text); }
+  .metric .sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
 
-.metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 20px; }
-.metric { background: var(--bg2); border-radius: var(--r); padding: 12px 14px; }
-.metric .lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; margin-bottom: 4px; }
-.metric .val { font-size: 22px; font-weight: 600; }
-.metric .sub2 { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .section-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
 
-.sec { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  /* Gantt */
+  .gantt-outer { overflow-x: auto; border: 0.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 20px; }
+  .gantt-inner { min-width: 700px; padding: 16px; }
+  .gantt-header { display: flex; margin-bottom: 6px; align-items: center; }
+  .name-col { width: 180px; min-width: 180px; flex-shrink: 0; }
+  .axis-wrap { flex: 1; display: grid; grid-template-columns: repeat(13, 1fr); }
+  .axis-wrap .h { font-size: 10px; color: var(--text3); text-align: center; }
+  .gantt-row { display: flex; align-items: center; margin-bottom: 5px; }
+  .row-meta { width: 180px; min-width: 180px; flex-shrink: 0; padding-right: 10px; }
+  .row-meta .rname { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .row-meta .rmeta { font-size: 10px; color: var(--text3); }
+  .track { flex: 1; position: relative; height: 26px; background: var(--bg2); border-radius: 4px; }
+  .gbar { position: absolute; height: 100%; border-radius: 4px; cursor: pointer; display: flex; align-items: center; padding: 0 7px; font-size: 11px; font-weight: 500; overflow: hidden; white-space: nowrap; transition: filter 0.15s; }
+  .gbar:hover { filter: brightness(0.92); }
+  .gbar.reglament { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,0.3); }
+  .gbar.trigger   { background: var(--green-bg); color: var(--green-text); border: 0.5px solid rgba(29,158,117,0.3); }
+  .gbar.other     { background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid rgba(186,117,23,0.3); }
+  .peak-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: rgba(226,75,74,0.5); pointer-events: none; z-index: 5; }
+  .peak-line::before { content: attr(data-label); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #A32D2D; white-space: nowrap; font-weight: 600; }
 
-.gantt-outer { border: 0.5px solid var(--border); border-radius: var(--rl); padding: 16px; margin-bottom: 10px; overflow-x: auto; }
-.gantt { min-width: 660px; }
-.grow { display: flex; align-items: center; margin-bottom: 5px; }
-.gmeta { width: 185px; min-width: 185px; padding-right: 10px; }
-.gname { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gsub { font-size: 10px; color: var(--text3); }
-.track { flex: 1; position: relative; height: 26px; background: var(--bg2); border-radius: 4px; }
-.track-axis { height: 18px; background: transparent; }
-.albl { position: absolute; font-size: 9px; color: var(--text3); transform: translateX(-50%); }
-.bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; font-weight: 600; overflow: hidden; white-space: nowrap; cursor: default; }
-.bar-reglament { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,.3); }
-.bar-trigger   { background: var(--green-bg); color: var(--green-text); border: 0.5px solid rgba(29,158,117,.3); }
-.bar-other     { background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid rgba(186,117,23,.3); }
-.peak-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: rgba(226,75,74,.45); pointer-events: none; }
+  /* Legend */
+  .legend { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .ld-r { background: var(--blue); }
+  .ld-t { background: var(--green); }
+  .ld-o { background: var(--amber); }
 
-.legend { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
-.leg { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); }
-.leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+  /* Load chart */
+  .chart-outer { border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 24px; }
+  .chart-wrap { position: relative; width: 100%; height: 160px; }
 
-.chart-outer { border: 0.5px solid var(--border); border-radius: var(--rl); padding: 16px; margin-bottom: 20px; }
-.chart-wrap { position: relative; width: 100%; height: 160px; }
+  /* Table */
+  .table-outer { border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { background: var(--bg2); text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 0.5px solid var(--border); }
+  tbody td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg2); }
+  .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+  .badge-r { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-t { background: var(--green-bg); color: var(--green-text); }
+  .badge-o { background: var(--amber-bg); color: var(--amber-text); }
+  .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 2px 4px; border-radius: 4px; }
+  .del-btn:hover { color: #A32D2D; background: #FCEBEB; }
 
-.tbl-outer { border: 0.5px solid var(--border); border-radius: var(--rl); overflow: hidden; margin-bottom: 24px; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-thead th { background: var(--bg2); text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; border-bottom: 0.5px solid var(--border); }
-tbody td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--bg2); }
-.badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
-.badge-reglament { background: var(--blue-bg); color: var(--blue-text); }
-.badge-trigger   { background: var(--green-bg); color: var(--green-text); }
-.badge-other     { background: var(--amber-bg); color: var(--amber-text); }
-.del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 2px 5px; border-radius: 4px; }
-.del:hover { color: #A32D2D; background: #FCEBEB; }
-.nodata { text-align: center; padding: 24px; color: var(--text3); font-size: 13px; }
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); padding: 24px; width: 380px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+  .modal-box h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .field input, .field select { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); outline: none; }
+  .field input:focus, .field select:focus { border-color: var(--blue); background: var(--bg); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
 
-.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.38); z-index: 200; align-items: center; justify-content: center; }
-.overlay.open { display: flex; }
-.modal { background: var(--bg); border-radius: var(--rl); border: 0.5px solid var(--border2); padding: 24px; width: 400px; max-width: 96vw; }
-.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-.frow { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-.field { flex: 1; min-width: 130px; }
-.field label { display: block; font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
-.field input, .field select { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--r); background: var(--bg2); color: var(--text); outline: none; }
-.field input:focus, .field select:focus { border-color: var(--blue); background: var(--bg); }
-.mbtns { display: flex; gap: 8px; margin-top: 16px; }
-.btn-save { flex: 1; padding: 8px; font-size: 13px; border: none; border-radius: var(--r); background: var(--blue); color: #fff; cursor: pointer; font-weight: 500; }
-.btn-save:disabled { opacity: .5; cursor: not-allowed; }
-
-.hr { border: none; border-top: 0.5px solid var(--border); margin: 20px 0; }
+  .hr { border: none; border-top: 0.5px solid var(--border); margin: 20px 0; }
+  .no-data { text-align: center; padding: 24px; color: var(--text3); font-size: 13px; }
+  .peak-badge { display: inline-block; background: #FCEBEB; color: #A32D2D; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; margin-left: 8px; vertical-align: middle; }
 </style>
 </head>
 <body>
 
 <h1>Mass Sending Calendar</h1>
-<p class="sub">Планирование рассылок · прогнозирование нагрузки на системы</p>
+<p class="subtitle">Планирование рассылок и прогнозирование нагрузки на системы</p>
 
-<div class="sync-bar">
-  <div class="sync-dot loading" id="sync-dot"></div>
-  <span id="sync-status">Подключаемся к Google Sheets...</span>
-  <button class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px;" onclick="loadFromSheets()">↻ Обновить</button>
-</div>
-
-<div class="topbar">
-  <span class="grp-label">Дата</span>
-  <button class="btn active" onclick="setF('date','all',this)">Все</button>
-  <button class="btn" onclick="setF('date','everyday',this)">Каждый день</button>
-  <div id="date-btns"></div>
-
-  <span class="grp-label" style="margin-left:8px;">Тип</span>
-  <button class="btn active" onclick="setF('type','all',this)">Все</button>
-  <button class="btn" onclick="setF('type','reglament',this)">Регламент</button>
-  <button class="btn" onclick="setF('type','trigger',this)">Триггер</button>
-
-  <span class="grp-label" style="margin-left:8px;">Канал</span>
-  <button class="btn active" onclick="setF('channel','all',this)">Все</button>
-  <button class="btn" onclick="setF('channel','RCS',this)">RCS</button>
-  <button class="btn" onclick="setF('channel','Push',this)">Push</button>
-  <button class="btn" onclick="setF('channel','SMS',this)">SMS</button>
-
-  <button class="btn btn-add" onclick="openModal()">+ Добавить рассылку</button>
+<div class="top-bar">
+  <select id="filterDate" onchange="render()">
+    <option value="all">Все даты</option>
+    <option value="everyday">Каждый день</option>
+    <option value="2026-04-16">16 апр 2026</option>
+    <option value="2026-04-17">17 апр 2026</option>
+  </select>
+  <select id="filterType" onchange="render()">
+    <option value="all">Все типы</option>
+    <option value="reglament">Регламент</option>
+    <option value="trigger">Триггер</option>
+    <option value="other">Другое</option>
+  </select>
+  <select id="filterChannel" onchange="render()">
+    <option value="all">Все каналы</option>
+    <option value="RCS">RCS</option>
+    <option value="Push">Push</option>
+    <option value="SMS">SMS</option>
+  </select>
+  <button class="btn btn-primary" onclick="openModal()">+ Добавить рассылку</button>
 </div>
 
 <div class="metrics" id="metrics"></div>
 
-<p class="sec">Gantt — временные окна отправки (08:00 – 21:00)</p>
-<div class="gantt-outer"><div class="gantt" id="gantt"></div></div>
-<div class="legend">
-  <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div>Регламент</div>
-  <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Триггер</div>
-  <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>Другое</div>
-  <div class="leg"><div class="leg-dot" style="background:rgba(226,75,74,.5);border-radius:0;width:3px;height:14px;"></div>Пик нагрузки</div>
+<p class="section-label">Gantt — временные окна отправки (08:00 – 21:00)</p>
+<div class="gantt-outer">
+  <div class="gantt-inner">
+    <div class="gantt-header">
+      <div class="name-col"></div>
+      <div class="axis-wrap" id="axisWrap"></div>
+    </div>
+    <div id="ganttRows"></div>
+  </div>
 </div>
 
-<p class="sec">Нагрузка на системы — объём сообщений по часам</p>
-<div class="chart-outer"><div class="chart-wrap"><canvas id="chart" role="img" aria-label="Нагрузка по часам">Данные нагрузки.</canvas></div></div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot ld-r"></div>Регламент</div>
+  <div class="legend-item"><div class="legend-dot ld-t"></div>Триггер</div>
+  <div class="legend-item"><div class="legend-dot ld-o"></div>Другое</div>
+</div>
 
-<p class="sec">Список рассылок</p>
-<div class="tbl-outer">
+<p class="section-label">Нагрузка на системы — объём сообщений по часам</p>
+<div class="chart-outer">
+  <div class="chart-wrap">
+    <canvas id="loadChart" role="img" aria-label="Объём сообщений по часам дня">Данные нагрузки по часам.</canvas>
+  </div>
+</div>
+
+<p class="section-label">Список рассылок</p>
+<div class="table-outer">
   <table>
-    <thead><tr><th>Название</th><th>Тип</th><th>Канал</th><th>Продукт</th><th>Время</th><th>Объём</th><th>Дата</th><th></th></tr></thead>
-    <tbody id="tbody"></tbody>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Тип</th>
+        <th>Канал</th>
+        <th>Продукт</th>
+        <th>Время</th>
+        <th>Объём</th>
+        <th>Дата</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
   </table>
 </div>
 
-<div class="overlay" id="overlay" onclick="overlayClick(event)">
-  <div class="modal">
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="overlayClick(event)">
+  <div class="modal-box">
     <h2>Новая рассылка</h2>
-    <div class="frow">
-      <div class="field" style="flex:2">
-        <label>Название</label>
-        <input id="f-name" placeholder="Cold CCR general">
-      </div>
+    <div class="field">
+      <label>Название</label>
+      <input id="f-name" placeholder="Cold CCR general">
     </div>
-    <div class="frow">
+    <div class="field-row">
       <div class="field">
         <label>Тип</label>
         <select id="f-type">
@@ -170,11 +204,14 @@ tbody tr:hover td { background: var(--bg2); }
       <div class="field">
         <label>Канал</label>
         <select id="f-channel">
-          <option>RCS</option><option>Push</option><option>SMS</option><option>Email</option>
+          <option>RCS</option>
+          <option>Push</option>
+          <option>SMS</option>
+          <option>Email</option>
         </select>
       </div>
     </div>
-    <div class="frow">
+    <div class="field-row">
       <div class="field">
         <label>Продукт</label>
         <input id="f-product" placeholder="CCR">
@@ -184,7 +221,7 @@ tbody tr:hover td { background: var(--bg2); }
         <input id="f-process" placeholder="Cold">
       </div>
     </div>
-    <div class="frow">
+    <div class="field-row">
       <div class="field">
         <label>Начало (час)</label>
         <input id="f-start" type="number" min="8" max="20" value="9">
@@ -193,110 +230,51 @@ tbody tr:hover td { background: var(--bg2); }
         <label>Конец (час)</label>
         <input id="f-end" type="number" min="9" max="21" value="20">
       </div>
+    </div>
+    <div class="field-row">
       <div class="field">
         <label>Объём</label>
-        <input id="f-volume" type="number" value="500000">
+        <input id="f-volume" type="number" value="100000">
+      </div>
+      <div class="field">
+        <label>Дата (YYYY-MM-DD)</label>
+        <input id="f-date" placeholder="everyday или 2026-04-16">
       </div>
     </div>
-    <div class="frow">
-      <div class="field" style="flex:2">
-        <label>Дата (YYYY-MM-DD или everyday)</label>
-        <input id="f-date" value="everyday">
-      </div>
-    </div>
-    <div class="mbtns">
+    <div class="modal-btns">
       <button class="btn" onclick="closeModal()">Отмена</button>
-      <button class="btn-save" id="save-btn" onclick="saveCampaign()">Сохранить в Sheets</button>
+      <button class="btn btn-primary" onclick="addCampaign()">Добавить</button>
     </div>
   </div>
 </div>
 
 <script>
-const SHEET_ID = '1Um5pnHtX4HYYT5Xm-xWem7-O_2U92Kp8FRDoIF_c5i4';
-const API_KEY  = 'AIzaSyCseb2wZyZ3REKfc2ww28O435-lmN5K1Xg';
-const RANGE    = 'Sheet1!A:I';
-const H_START  = 8, H_END = 21, H_TOTAL = 13;
+const H_START = 8, H_END = 21, H_TOTAL = H_END - H_START;
 
-let campaigns = [];
-let filters = { date: 'all', type: 'all', channel: 'all' };
+let campaigns = [
+  { id:1, name:'Cold CCR general',    type:'reglament', channel:'RCS',  product:'CCR', process:'Cold',            start:8,  end:20, volume:400000,    date:'everyday' },
+  { id:2, name:'PR Concierto campaign', type:'trigger', channel:'Push', product:'CCR', process:'Portfolio growth', start:9,  end:10, volume:15000000,  date:'2026-04-16' },
+  { id:3, name:'Welcome SMS',          type:'trigger',  channel:'SMS',  product:'CCR', process:'Cold',            start:10, end:12, volume:500000,    date:'everyday' },
+  { id:4, name:'Promo abril',          type:'reglament',channel:'Push', product:'CCR', process:'Warm',            start:14, end:18, volume:2000000,   date:'2026-04-16' },
+];
+let nextId = 5;
 let chart = null;
 
 function fmt(n) {
   if (n >= 1e9) return (n/1e9).toFixed(1).replace('.0','') + 'B';
   if (n >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
   if (n >= 1e3) return Math.round(n/1e3) + 'K';
-  return '' + n;
-}
-
-function setSyncStatus(msg, state) {
-  document.getElementById('sync-status').textContent = msg;
-  const dot = document.getElementById('sync-dot');
-  dot.className = 'sync-dot' + (state ? ' ' + state : '');
-}
-
-async function loadFromSheets() {
-  setSyncStatus('Загружаем данные...', 'loading');
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
-    const r = await fetch(url);
-    const data = await r.json();
-    if (data.error) throw new Error(data.error.message);
-    const rows = (data.values || []).slice(1);
-    campaigns = rows.filter(r => r[0]).map((r, i) => ({
-      id: i,
-      name:    r[0] || '',
-      channel: r[1] || '',
-      type:    r[2] || 'other',
-      product: r[3] || '',
-      process: r[4] || '',
-      start:   parseInt(r[5]) || 8,
-      end:     parseInt(r[6]) || 20,
-      volume:  parseInt(r[7]) || 0,
-      date:    r[8] || 'everyday',
-    }));
-    updateDateButtons();
-    setSyncStatus('Синхронизировано · ' + new Date().toLocaleTimeString('ru'), '');
-    render();
-  } catch(e) {
-    setSyncStatus('Ошибка: ' + e.message + ' — проверь доступ к таблице', 'error');
-    render();
-  }
-}
-
-async function appendToSheets(row) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ values: [row] })
-  });
-  const data = await r.json();
-  if (data.error) throw new Error(data.error.message);
-  return data;
-}
-
-function updateDateButtons() {
-  const dates = [...new Set(campaigns.map(c => c.date).filter(d => d !== 'everyday'))].sort();
-  const wrap = document.getElementById('date-btns');
-  wrap.innerHTML = dates.map(d =>
-    `<button class="btn" onclick="setF('date','${d}',this)">${d.slice(5).replace('-','/')}</button>`
-  ).join('');
-}
-
-function setF(key, val, btn) {
-  filters[key] = val;
-  const siblings = btn.parentNode.querySelectorAll('.btn[onclick*="setF(\'' + key + '\'"]');
-  siblings.forEach(b => b.classList.remove('active'));
-  // fallback: remove active from all btns in same group area
-  btn.classList.add('active');
-  render();
+  return n.toString();
 }
 
 function getFiltered() {
+  const fd = document.getElementById('filterDate').value;
+  const ft = document.getElementById('filterType').value;
+  const fc = document.getElementById('filterChannel').value;
   return campaigns.filter(c =>
-    (filters.date === 'all' || c.date === filters.date) &&
-    (filters.type === 'all' || c.type === filters.type) &&
-    (filters.channel === 'all' || c.channel === filters.channel)
+    (fd === 'all' || c.date === fd) &&
+    (ft === 'all' || c.type === ft) &&
+    (fc === 'all' || c.channel === fc)
   );
 }
 
@@ -313,59 +291,82 @@ function getHourLoad(data) {
 }
 
 function renderMetrics(data) {
-  const total = data.reduce((s,c) => s + c.volume, 0);
+  const total = data.reduce((s,c)=>s+c.volume,0);
   const hours = getHourLoad(data);
-  const peakVal = Math.max(...hours, 0);
-  const peakH = H_START + hours.indexOf(peakVal);
-  const totalH = data.reduce((s,c) => s + (c.end - c.start), 0);
-  const avg = totalH ? Math.round(total / totalH) : 0;
+  const peakVal = Math.max(...hours);
+  const peakHour = H_START + hours.indexOf(peakVal);
+  const totalHours = data.reduce((s,c)=>s+(c.end-c.start),0);
+  const avg = totalHours ? Math.round(total/totalHours) : 0;
   document.getElementById('metrics').innerHTML = `
-    <div class="metric"><div class="lbl">Кампаний</div><div class="val">${data.length}</div></div>
-    <div class="metric"><div class="lbl">Суммарный объём</div><div class="val">${fmt(total)}</div></div>
-    <div class="metric"><div class="lbl">Пиковый час</div><div class="val">${fmt(peakVal)}</div><div class="sub2">${peakH}:00 – ${peakH+1}:00</div></div>
-    <div class="metric"><div class="lbl">Ср. нагрузка/час</div><div class="val">${fmt(avg)}</div></div>`;
+    <div class="metric"><div class="label">Кампаний</div><div class="val">${data.length}</div></div>
+    <div class="metric"><div class="label">Суммарный объём</div><div class="val">${fmt(total)}</div></div>
+    <div class="metric"><div class="label">Пиковый час</div><div class="val">${fmt(peakVal)}</div><div class="sub">${peakHour}:00 – ${peakHour+1}:00</div></div>
+    <div class="metric"><div class="label">Ср. нагрузка/час</div><div class="val">${fmt(avg)}</div></div>
+  `;
+}
+
+function renderAxis() {
+  const el = document.getElementById('axisWrap');
+  let html = '';
+  for (let h = H_START; h < H_END; h++) html += `<div class="h">${h}:00</div>`;
+  el.innerHTML = html;
 }
 
 function renderGantt(data) {
-  const el = document.getElementById('gantt');
-  if (!data.length) { el.innerHTML = '<div class="nodata">Нет рассылок</div>'; return; }
+  const el = document.getElementById('ganttRows');
+  if (!data.length) { el.innerHTML = '<div class="no-data">Нет рассылок для выбранных фильтров</div>'; return; }
   const hours = getHourLoad(data);
   const peakIdx = hours.indexOf(Math.max(...hours));
   const peakPct = ((peakIdx + 0.5) / H_TOTAL * 100).toFixed(2);
 
-  let axis = '<div class="grow"><div class="gmeta"></div><div class="track track-axis">';
-  for (let h = H_START; h < H_END; h++)
-    axis += `<span class="albl" style="left:${((h-H_START)/H_TOTAL*100).toFixed(1)}%">${h}:00</span>`;
-  axis += '</div></div>';
-
-  const rows = data.map(c => {
+  el.innerHTML = data.map(c => {
     const left = ((c.start - H_START) / H_TOTAL * 100).toFixed(2);
     const width = ((c.end - c.start) / H_TOTAL * 100).toFixed(2);
-    const dateStr = c.date === 'everyday' ? 'каждый день' : c.date.slice(5).replace('-','/');
-    const label = parseFloat(width) > 11 ? fmt(c.volume) : '';
-    return `<div class="grow">
-      <div class="gmeta"><div class="gname" title="${c.name}">${c.name}</div><div class="gsub">${c.channel} · ${dateStr}</div></div>
+    const dateStr = c.date === 'everyday' ? 'каждый день' : c.date.slice(5).replace('-', '/');
+    return `
+    <div class="gantt-row">
+      <div class="row-meta">
+        <div class="rname" title="${c.name}">${c.name}</div>
+        <div class="rmeta">${c.channel} · ${dateStr}</div>
+      </div>
       <div class="track">
-        <div class="bar bar-${c.type}" style="left:${left}%;width:${width}%" title="${c.name} | ${fmt(c.volume)} | ${c.start}:00–${c.end}:00">${label}</div>
-        <div class="peak-line" style="left:${peakPct}%"></div>
+        <div class="gbar ${c.type}" style="left:${left}%;width:${width}%"
+             title="${c.name} | ${c.channel} | ${fmt(c.volume)} сообщ. | ${c.start}:00–${c.end}:00 | ${dateStr}">
+          ${parseFloat(width) > 12 ? fmt(c.volume) : ''}
+        </div>
+        <div class="peak-line" style="left:${peakPct}%" data-label="пик"></div>
       </div>
     </div>`;
   }).join('');
-  el.innerHTML = axis + rows;
 }
 
 function renderChart(data) {
-  const labels = Array.from({length: H_TOTAL}, (_,i) => `${H_START+i}:00`);
+  const labels = [];
+  for (let h = H_START; h < H_END; h++) labels.push(`${h}:00`);
   const vals = getHourLoad(data);
-  const maxV = Math.max(...vals, 1);
-  const colors = vals.map(v => v === maxV && maxV > 0 ? '#E24B4A' : '#378ADD');
+  const maxVal = Math.max(...vals);
+  const colors = vals.map(v => v === maxVal && maxVal > 0 ? '#E24B4A' : '#378ADD');
+
   if (chart) chart.destroy();
-  chart = new Chart(document.getElementById('chart'), {
+  chart = new Chart(document.getElementById('loadChart'), {
     type: 'bar',
-    data: { labels, datasets: [{ data: vals, backgroundColor: colors, borderRadius: 3, barPercentage: 0.72 }] },
+    data: {
+      labels,
+      datasets: [{
+        label: 'Объём/час',
+        data: vals,
+        backgroundColor: colors,
+        borderRadius: 3,
+        barPercentage: 0.7,
+      }]
+    },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.parsed.y) + ' сообщений' } } },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.parsed.y) + ' сообщений' } }
+      },
       scales: {
         x: { ticks: { color: '#888780', font: { size: 10 }, autoSkip: false, maxRotation: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
         y: { ticks: { color: '#888780', font: { size: 10 }, callback: v => fmt(v) }, grid: { color: 'rgba(0,0,0,0.05)' } }
@@ -375,25 +376,23 @@ function renderChart(data) {
 }
 
 function renderTable(data) {
-  const el = document.getElementById('tbody');
-  if (!data.length) { el.innerHTML = '<tr><td colspan="8" class="nodata">Нет данных</td></tr>'; return; }
-  const tl = t => t === 'reglament' ? 'Регламент' : t === 'trigger' ? 'Триггер' : 'Другое';
-  const ds = d => d === 'everyday' ? 'Каждый день' : d.slice(5).replace('-','/');
-  el.innerHTML = data.map(c => `<tr>
-    <td><strong>${c.name}</strong></td>
-    <td><span class="badge badge-${c.type}">${tl(c.type)}</span></td>
-    <td>${c.channel}</td>
-    <td>${c.product || '—'}</td>
-    <td>${c.start}:00–${c.end}:00</td>
-    <td>${fmt(c.volume)}</td>
-    <td>${ds(c.date)}</td>
-    <td><button class="del" title="Удалить локально" onclick="delLocal(${c.id})">✕</button></td>
-  </tr>`).join('');
-}
-
-function delLocal(id) {
-  campaigns = campaigns.filter(c => c.id !== id);
-  render();
+  const el = document.getElementById('tableBody');
+  if (!data.length) { el.innerHTML = '<tr><td colspan="8" class="no-data">Нет данных</td></tr>'; return; }
+  const badgeClass = t => t === 'reglament' ? 'badge-r' : t === 'trigger' ? 'badge-t' : 'badge-o';
+  const typeLabel = t => t === 'reglament' ? 'Регламент' : t === 'trigger' ? 'Триггер' : 'Другое';
+  const dateStr = d => d === 'everyday' ? 'Каждый день' : d.slice(5).replace('-', '/');
+  el.innerHTML = data.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="badge ${badgeClass(c.type)}">${typeLabel(c.type)}</span></td>
+      <td>${c.channel}</td>
+      <td>${c.product || '—'}</td>
+      <td>${c.start}:00 – ${c.end}:00</td>
+      <td>${fmt(c.volume)}</td>
+      <td>${dateStr(c.date)}</td>
+      <td><button class="del-btn" onclick="deleteCampaign(${c.id})" title="Удалить">✕</button></td>
+    </tr>
+  `).join('');
 }
 
 function render() {
@@ -404,47 +403,37 @@ function render() {
   renderTable(data);
 }
 
-function openModal() { document.getElementById('overlay').classList.add('open'); }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); }
-function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+function deleteCampaign(id) {
+  campaigns = campaigns.filter(c => c.id !== id);
+  render();
+}
 
-async function saveCampaign() {
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function overlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+function addCampaign() {
   const name = document.getElementById('f-name').value.trim();
   if (!name) { alert('Введи название'); return; }
   const start = parseInt(document.getElementById('f-start').value);
-  const end   = parseInt(document.getElementById('f-end').value);
+  const end = parseInt(document.getElementById('f-end').value);
   if (end <= start) { alert('Конец должен быть позже начала'); return; }
+  const date = document.getElementById('f-date').value.trim() || 'everyday';
+  campaigns.push({ id: nextId++, name, type: document.getElementById('f-type').value, channel: document.getElementById('f-channel').value, product: document.getElementById('f-product').value || '—', process: document.getElementById('f-process').value || '—', start, end, volume: parseInt(document.getElementById('f-volume').value) || 100000, date });
 
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  btn.textContent = 'Сохраняем...';
-
-  const row = [
-    name,
-    document.getElementById('f-channel').value,
-    document.getElementById('f-type').value,
-    document.getElementById('f-product').value || '',
-    document.getElementById('f-process').value || '',
-    start, end,
-    parseInt(document.getElementById('f-volume').value) || 100000,
-    document.getElementById('f-date').value || 'everyday',
-  ];
-
-  try {
-    await appendToSheets(row);
-    closeModal();
-    btn.textContent = 'Сохранить в Sheets';
-    btn.disabled = false;
-    await loadFromSheets();
-  } catch(e) {
-    alert('Ошибка сохранения: ' + e.message + '\n\nПроверь что таблица открыта на редактирование для всех.');
-    btn.textContent = 'Сохранить в Sheets';
-    btn.disabled = false;
+  // add date to filter if new
+  const sel = document.getElementById('filterDate');
+  if (date !== 'everyday' && !Array.from(sel.options).find(o => o.value === date)) {
+    const opt = document.createElement('option');
+    opt.value = date; opt.text = date.slice(5).replace('-', ' апр ');
+    sel.appendChild(opt);
   }
+  closeModal();
+  render();
 }
 
-loadFromSheets();
-setInterval(loadFromSheets, 60000);
+renderAxis();
+render();
 </script>
 </body>
 </html>
