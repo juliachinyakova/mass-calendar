@@ -674,4 +674,9 @@ async function saveCampaign(){
 
 selectedDay=dateStr(new Date());
 updateWeekLabel();
-document.getElementById('day-nav').style.display='flex
+document.getElementById('day-nav').style.display='flex';
+loadFromSheets();
+setInterval(loadFromSheets,60000);
+</script>
+</body>
+</html>
