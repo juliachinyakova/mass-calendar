@@ -308,7 +308,7 @@ function getMonday(offset){
 }
 
 function dateStr(d){
-  return d.toISOString().slice(0,10);
+  const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
 function fmtDay(d){
@@ -365,7 +365,7 @@ function buildDayNav(){
   if(!selectedDay)selectedDay=today;
   const el=document.getElementById('day-nav');
   el.innerHTML=all.map(d=>{
-    const label=d===today?'Today ('+fmtDay(new Date(d+' 12:00'))+')':(new Date(d+' 12:00')).toLocaleDateString('en',{month:'short',day:'numeric'});
+    const label=d===today?'Today ('+fmtDay(new Date(d+'T12:00:00'))+')':(new Date(d+'T12:00:00')).toLocaleDateString('en',{month:'short',day:'numeric'});
     return `<button class="day-btn${d===selectedDay?' active':''}${d===today?' today':''}" onclick="selectDay('${d}',this)">${label}</button>`;
   }).join('');
 }
@@ -674,9 +674,4 @@ async function saveCampaign(){
 
 selectedDay=dateStr(new Date());
 updateWeekLabel();
-document.getElementById('day-nav').style.display='flex';
-loadFromSheets();
-setInterval(loadFromSheets,60000);
-</script>
-</body>
-</html>
+document.getElementById('day-nav').style.display='flex
